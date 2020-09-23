@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
+#include "GameFramework/CharacterMovementComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -107,7 +108,19 @@ void AWallRun2Character::SetupPlayerInputComponent(class UInputComponent* Player
 
 void AWallRun2Character::OnPlayerCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	FVector HitNormal = Hit.ImpactNormal;
+
+	if (!isSurfaceWallRunnable(HitNormal))
+	{
+		return;
+	}
+
 	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, TEXT("Capsule hit!"));
+}
+
+bool AWallRun2Character::isSurfaceWallRunnable(const FVector& SurfaceNormal)
+{
+	return !(SurfaceNormal.Z > GetCharacterMovement()->GetWalkableFloorZ() || SurfaceNormal.Z < -0.005f);
 }
 
 void AWallRun2Character::OnFire()
