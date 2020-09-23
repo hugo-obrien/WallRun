@@ -73,6 +73,8 @@ void AWallRun2Character::BeginPlay()
 
 	// Show or hide the two versions of the gun based on whether or not we're using motion controllers.
 	Mesh1P->SetHiddenInGame(false, true);
+
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AWallRun2Character::OnPlayerCapsuleHit);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -101,6 +103,11 @@ void AWallRun2Character::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAxis("TurnRate", this, &AWallRun2Character::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AWallRun2Character::LookUpAtRate);
+}
+
+void AWallRun2Character::OnPlayerCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, TEXT("Capsule hit!"));
 }
 
 void AWallRun2Character::OnFire()
