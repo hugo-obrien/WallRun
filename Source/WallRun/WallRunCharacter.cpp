@@ -6,6 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
@@ -63,6 +64,8 @@ void AWallRunCharacter::BeginPlay()
 	                          TEXT("GripPoint"));
 	
 	Mesh1P->SetHiddenInGame(false, true);
+
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AWallRunCharacter::OnPlayerCapsuleHit);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -91,6 +94,22 @@ void AWallRunCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	PlayerInputComponent->BindAxis("TurnRate", this, &AWallRunCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AWallRunCharacter::LookUpAtRate);
+}
+
+void AWallRunCharacter::OnPlayerCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	const FVector HitNormal = Hit.ImpactNormal;
+
+	if (IsSurfaceWallRunnable(HitNormal))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Capsule hit!"));
+	}
+}
+
+bool AWallRunCharacter::IsSurfaceWallRunnable(const FVector& SurfaceNormal)
+{
+	return !(SurfaceNormal.Z > GetCharacterMovement()->GetWalkableFloorZ() || SurfaceNormal.Z < -0.005f);
 }
 
 void AWallRunCharacter::OnFire()
