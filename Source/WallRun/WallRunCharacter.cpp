@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "WallRunCharacter.h"
+
+#include "InteractiveToolManager.h"
 #include "WallRunProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -101,25 +103,58 @@ void AWallRunCharacter::OnPlayerCapsuleHit(UPrimitiveComponent* HitComponent, AA
 {
 	const FVector HitNormal = Hit.ImpactNormal;
 
-	if (IsSurfaceWallRunnable(HitNormal))
+	if (!IsSurfaceWallRunnable(HitNormal))
 	{
-		EWallRunSide Side = EWallRunSide::None;
-		if (FVector::DotProduct(HitNormal, GetActorRightVector()) > 0)
-		{
-			Side = EWallRunSide::Left;
-			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Capsule hit! LEFT"));
-		}
-		else
-		{
-			Side = EWallRunSide::Right;
-			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::White, TEXT("Capsule hit! RIGHT"));
-		}
+		return;
 	}
+
+	if (!GetCharacterMovement()->IsFalling())
+	{
+		return;
+	}
+
+	EWallRunSide Side = EWallRunSide::None;
+	if (FVector::DotProduct(HitNormal, GetActorRightVector()) > 0)
+	{
+		Side = EWallRunSide::Left;
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Capsule hit! LEFT"));
+	} else
+	{
+		Side = EWallRunSide::Right;
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::White, TEXT("Capsule hit! RIGHT"));
+	}
+
+	if (!AreRequiredKeysDown(Side))
+	{
+		return;
+	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Magenta, TEXT("Character can wallrun"));
 }
 
 bool AWallRunCharacter::IsSurfaceWallRunnable(const FVector& SurfaceNormal)
 {
 	return !(SurfaceNormal.Z > GetCharacterMovement()->GetWalkableFloorZ() || SurfaceNormal.Z < -0.005f);
+}
+
+bool AWallRunCharacter::AreRequiredKeysDown(EWallRunSide Side)
+{
+	if (ForwardAxis < 0.1f)
+	{
+		return false;
+	}
+
+	if (Side == EWallRunSide::Right && RightAxis < -0.1f)
+	{
+		return false;
+	}
+
+	if (Side == EWallRunSide::Left && RightAxis > 0.1f)
+	{
+		return false;
+	}
+
+	return true;
 }
 
 void AWallRunCharacter::OnFire()
@@ -166,6 +201,7 @@ void AWallRunCharacter::OnFire()
 
 void AWallRunCharacter::MoveForward(float Value)
 {
+	this->ForwardAxis = Value;
 	if (Value != 0.0f)
 	{
 		// add movement in that direction
@@ -175,6 +211,7 @@ void AWallRunCharacter::MoveForward(float Value)
 
 void AWallRunCharacter::MoveRight(float Value)
 {
+	this->RightAxis = Value;
 	if (Value != 0.0f)
 	{
 		// add movement in that direction

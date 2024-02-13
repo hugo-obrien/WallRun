@@ -114,5 +114,10 @@ private:
 
 	bool IsSurfaceWallRunnable(const FVector& SurfaceNormal);
 
+	bool AreRequiredKeysDown(EWallRunSide Side);
+
+	float ForwardAxis = 0.0f;
+	float RightAxis = 0.0f;
+
 };
 
