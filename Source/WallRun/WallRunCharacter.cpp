@@ -62,7 +62,7 @@ void AWallRunCharacter::BeginPlay()
 	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
 	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
 	                          TEXT("GripPoint"));
-	
+
 	Mesh1P->SetHiddenInGame(false, true);
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AWallRunCharacter::OnPlayerCapsuleHit);
@@ -97,13 +97,23 @@ void AWallRunCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 }
 
 void AWallRunCharacter::OnPlayerCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+                                           UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	const FVector HitNormal = Hit.ImpactNormal;
 
 	if (IsSurfaceWallRunnable(HitNormal))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Capsule hit!"));
+		EWallRunSide Side = EWallRunSide::None;
+		if (FVector::DotProduct(HitNormal, GetActorRightVector()) > 0)
+		{
+			Side = EWallRunSide::Left;
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Capsule hit! LEFT"));
+		}
+		else
+		{
+			Side = EWallRunSide::Right;
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::White, TEXT("Capsule hit! RIGHT"));
+		}
 	}
 }
 

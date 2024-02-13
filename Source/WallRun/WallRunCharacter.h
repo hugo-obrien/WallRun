@@ -14,6 +14,14 @@ class UMotionControllerComponent;
 class UAnimMontage;
 class USoundBase;
 
+UENUM()
+enum class EWallRunSide: uint8
+{
+	None,
+	Left,
+	Right
+};
+
 UCLASS(config=Game)
 class AWallRunCharacter : public ACharacter
 {
