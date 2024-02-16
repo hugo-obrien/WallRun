@@ -49,6 +49,8 @@ public:
 protected:
 	virtual void BeginPlay();
 
+	virtual void Tick(float DeltaSeconds) override;
+
 public:
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -96,10 +98,14 @@ protected:
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
 	void LookUpAtRate(float Rate);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="WallRun", meta=(UIMin = 0.0f, ClampMin = 0.0f))
+	float MaxWallRunTime = 1.0f;
 	
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
+	void GetWallRunSideAndDirection(const FVector HitNormal, EWallRunSide& OutSide, FVector& OutDirection) const;
 	// End of APawn interface
 
 public:
@@ -112,12 +118,22 @@ private:
 	UFUNCTION()
 	void OnPlayerCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
-	bool IsSurfaceWallRunnable(const FVector& SurfaceNormal);
+	bool IsSurfaceWallRunnable(const FVector& SurfaceNormal) const;
 
-	bool AreRequiredKeysDown(EWallRunSide Side);
-
+	bool AreRequiredKeysDown(EWallRunSide Side) const;
+	
 	float ForwardAxis = 0.0f;
 	float RightAxis = 0.0f;
 
+	void StartWallRun(EWallRunSide Side, const FVector& Direction);
+	void StopWallRun();
+	void UpdateWallRun();
+
+	bool bIsWallRunning = false;
+	
+	EWallRunSide CurrentWallRunSide = EWallRunSide::None;
+	FVector CurrentWallRunDirection = FVector::ZeroVector;
+
+	FTimerHandle WallRunTimer;
 };
 
