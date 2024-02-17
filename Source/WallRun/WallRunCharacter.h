@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "WallRunCharacter.generated.h"
 
@@ -76,8 +77,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	UAnimMontage* FireAnimation;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WallRun")
+	UCurveFloat* CameraTiltCurve;
+
 protected:
-	
 	/** Fires a projectile. */
 	void OnFire();
 
@@ -101,7 +104,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="WallRun", meta=(UIMin = 0.0f, ClampMin = 0.0f))
 	float MaxWallRunTime = 1.0f;
-	
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
@@ -116,12 +119,13 @@ public:
 
 private:
 	UFUNCTION()
-	void OnPlayerCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	void OnPlayerCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	                        FVector NormalImpulse, const FHitResult& Hit);
 
 	bool IsSurfaceWallRunnable(const FVector& SurfaceNormal) const;
 
 	bool AreRequiredKeysDown(EWallRunSide Side) const;
-	
+
 	float ForwardAxis = 0.0f;
 	float RightAxis = 0.0f;
 
@@ -130,10 +134,18 @@ private:
 	void UpdateWallRun();
 
 	bool bIsWallRunning = false;
-	
+
 	EWallRunSide CurrentWallRunSide = EWallRunSide::None;
 	FVector CurrentWallRunDirection = FVector::ZeroVector;
 
 	FTimerHandle WallRunTimer;
-};
 
+	FTimeline CameraTiltTimeline;
+
+	FORCEINLINE
+	void BeginCameraTilt() { CameraTiltTimeline.Play(); }
+	FORCEINLINE
+	void EndCameraTilt() { CameraTiltTimeline.Reverse(); }
+	UFUNCTION()
+	void UpdateCameraTilt(float Value);
+};

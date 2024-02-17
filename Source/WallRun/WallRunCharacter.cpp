@@ -68,8 +68,14 @@ void AWallRunCharacter::BeginPlay()
 	Mesh1P->SetHiddenInGame(false, true);
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AWallRunCharacter::OnPlayerCapsuleHit);
-
 	GetCharacterMovement()->SetPlaneConstraintEnabled(true);
+
+	if (IsValid(CameraTiltCurve))
+	{
+		FOnTimelineFloat TimelineCallback;
+		TimelineCallback.BindUFunction(this, FName("UpdateCameraTilt"));
+		CameraTiltTimeline.AddInterpFloat(CameraTiltCurve, TimelineCallback);
+	}
 }
 
 void AWallRunCharacter::Tick(float DeltaSeconds)
@@ -79,6 +85,8 @@ void AWallRunCharacter::Tick(float DeltaSeconds)
 	{
 		UpdateWallRun();
 	}
+
+	CameraTiltTimeline.TickTimeline(DeltaSeconds);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -191,6 +199,7 @@ void AWallRunCharacter::StartWallRun(EWallRunSide Side, const FVector& Direction
 	
 	
 	GetCharacterMovement()->SetPlaneConstraintNormal(FVector::UpVector);
+	BeginCameraTilt();
 
 	GetWorld()->GetTimerManager().SetTimer(WallRunTimer, this, &AWallRunCharacter::StopWallRun, MaxWallRunTime, false);
 }
@@ -200,10 +209,11 @@ void AWallRunCharacter::StopWallRun()
 	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, TEXT("Stop wallrun"));
 	bIsWallRunning = false;
 
-	CurrentWallRunSide = EWallRunSide::None;
-	CurrentWallRunDirection = FVector::ZeroVector;
+	/*CurrentWallRunSide = EWallRunSide::None;
+	CurrentWallRunDirection = FVector::ZeroVector;*/
 
 	GetCharacterMovement()->SetPlaneConstraintNormal(FVector::ZeroVector);
+	EndCameraTilt();
 
 	/*bIsWallRunDelayEnds = false;
 	GetWorld()->GetTimerManager().SetTimer(WallRunDelayTimer, this, &AWallRunCharacter::SwitchWallRunDelay, WallRunDelay, false);*/
@@ -249,6 +259,13 @@ void AWallRunCharacter::UpdateWallRun()
 	{
 		StopWallRun();
 	}
+}
+
+void AWallRunCharacter::UpdateCameraTilt(float Value)
+{
+	FRotator CurrentControlRotation = GetControlRotation();
+	CurrentControlRotation.Roll = CurrentWallRunSide == EWallRunSide::Left ? Value : -Value;
+	GetController()->SetControlRotation(CurrentControlRotation);
 }
 
 void AWallRunCharacter::OnFire()
