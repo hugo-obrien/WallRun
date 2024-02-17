@@ -268,6 +268,28 @@ void AWallRunCharacter::UpdateCameraTilt(float Value)
 	GetController()->SetControlRotation(CurrentControlRotation);
 }
 
+void AWallRunCharacter::Jump()
+{
+	if (bIsWallRunning)
+	{
+		FVector JumpDirection = FVector::ZeroVector;
+		if (CurrentWallRunSide == EWallRunSide::Right)
+		{
+			JumpDirection = FVector::CrossProduct(CurrentWallRunDirection, FVector::UpVector).GetSafeNormal();
+		} else
+		{
+			JumpDirection = FVector::CrossProduct(FVector::UpVector, CurrentWallRunDirection).GetSafeNormal();
+		}
+
+		JumpDirection += FVector::UpVector;
+		LaunchCharacter(GetCharacterMovement()->JumpZVelocity * JumpDirection.GetSafeNormal(), false, true);
+		StopWallRun();
+	} else
+	{
+		Super::Jump();
+	}
+}
+
 void AWallRunCharacter::OnFire()
 {
 	// try and fire a projectile

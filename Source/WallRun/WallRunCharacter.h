@@ -47,6 +47,8 @@ class AWallRunCharacter : public ACharacter
 public:
 	AWallRunCharacter();
 
+	virtual void Jump() override;
+
 protected:
 	virtual void BeginPlay();
 
